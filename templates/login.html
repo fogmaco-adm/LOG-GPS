@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LOG-GPS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #f0f9ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-login {
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.15);
+            background: #ffffff;
+            border: 1px solid #e0f2fe;
+        }
+        .btn-soft-blue {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-soft-blue:hover {
+            background-color: #1d4ed8;
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .form-control:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-login text-center">
+        <!-- Logo AlamTri Geo (Diperbesar ukurannya) -->
+        <div class="mb-3">
+            <img src="{{ url_for('static', filename='alamtri_login.png') }}" 
+                 alt="Logo AlamTri Geo" 
+                 style="height: 78px; width: auto; object-fit: contain;" 
+                 class="mx-auto d-block">
+        </div>
+
+        <h3 class="fw-bold mb-0" style="color: #1e40af;">LOG-GPS</h3>
+        <p class="text-muted small mb-4" style="letter-spacing: 0.5px;">LOGISTIC GENERAL PORTAL SYSTEM</p>
+
+        <!-- Pesan Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show text-start small border-0 shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/login" class="text-start">
+            <div class="mb-3">
+                <label for="nrp" class="form-label fw-semibold text-secondary small">NRP / NIK</label>
+                <input type="text" class="form-control py-2" id="nrp" name="nrp" placeholder="Masukkan NRP Anda" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label for="pin" class="form-label fw-semibold text-secondary small">PIN Akses</label>
+                <input type="password" class="form-control py-2" id="pin" name="pin" placeholder="Masukkan 6-digit PIN Akses" required>
+            </div>
+            <button type="submit" class="btn btn-soft-blue w-100 py-2.5 fw-semibold mt-2 rounded-3">MASUK PORTAL</button>
+        </form>
+        
+        <div class="text-center mt-4 text-muted small" style="font-size: 0.78rem;">
+            &copy; 2026 LOG-GPS &bull; Logistic Support
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
