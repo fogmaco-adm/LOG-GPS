@@ -72,7 +72,7 @@ def employee_dashboard():
     
     target_subfolder = ""
     if user_company == "NON STAFF":
-        target_subfolder = "Nonstaff"
+        target_subfolder = "NonStaff"
     elif user_company == "BMP":
         target_subfolder = "BMP"
     elif user_company == "CMU":

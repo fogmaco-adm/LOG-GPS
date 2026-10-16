@@ -52,7 +52,7 @@ try:
     for nrp in unique_nrps:
         emp_data = df_master[df_master['NRP'] == nrp]
         
-        nrp_str = str(nrp)
+        nrp_str = str(nrp).split('.')[0] if '.' in str(nrp) else str(nrp)
         nama = str(emp_data['Nama'].iloc[0]) if 'Nama' in emp_data.columns else "-"
         section = str(emp_data['Section'].iloc[0]) if 'Section' in emp_data.columns else "-"
         job_title = str(emp_data['Job Title'].iloc[0]) if 'Job Title' in emp_data.columns else "-"
