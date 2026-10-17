@@ -97,7 +97,7 @@ def employee_dashboard():
                     my_files.append({
                         "filename": file,
                         "subfolder": sub_path_url,
-                        "category": periode_or_category  # Menampilkan nama sub-folder periode (misal: September_2026)
+                        "periode": periode_or_category  # Menampilkan nama sub-folder periode (misal: September_2026)
                     })
                 
     return render_template('dashboard_employee.html', user=user, files=my_files)
