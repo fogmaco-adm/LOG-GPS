@@ -81,18 +81,23 @@ def employee_dashboard():
     folder_path = os.path.join(PATH_OUTPUT_ROOT, target_subfolder)
     my_files = []
     
-    # OS.WALK menelusuri folder utama hingga ke dalam subfolder jabatan
+    # OS.WALK menelusuri folder utama hingga ke dalam sub-folder periode
     if os.path.exists(folder_path):
         for root, dirs, files in os.walk(folder_path):
             for file in files:
                 if file.lower().endswith('.pdf') and user_nrp in file:
-                    rel_path = os.path.relpath(os.path.join(root, file), folder_path)
+                    full_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(full_path, folder_path)
                     sub_path_url = f"{target_subfolder}/{rel_path.replace(os.sep, '/')}"
+                    
+                    # Ambil nama folder induk terdekat sebagai informasi Periode/Kategori
+                    folder_parts = rel_path.split(os.sep)
+                    periode_or_category = folder_parts[-2] if len(folder_parts) > 1 else target_subfolder
                     
                     my_files.append({
                         "filename": file,
                         "subfolder": sub_path_url,
-                        "category": os.path.basename(root)
+                        "category": periode_or_category  # Menampilkan nama sub-folder periode (misal: September_2026)
                     })
                 
     return render_template('dashboard_employee.html', user=user, files=my_files)

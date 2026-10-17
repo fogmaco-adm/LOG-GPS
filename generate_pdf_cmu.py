@@ -234,14 +234,30 @@ def generate_cmu_timesheet():
                 if final_keterangan and final_keterangan.lower() != 'nan':
                     ws.Cells(current_row, 11).Value = final_keterangan
                 
-            # 3. Export ke PDF
+           # --- PEMBUATAN STR PERIODE ---
+            # Nama bulan dalam Bahasa Indonesia / Bahasa Inggris
+            nama_bulan = [
+                "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ]
+            periode_str = f"{nama_bulan[month]}_{year}"  # Contoh hasil: "Agustus_2026"
+            
+            # 3. Export ke PDF dengan Periode & Sub-Folder Otomatis
             nama_clean = nama.replace(' ', '_').replace('/', '_')
-            pdf_filename = f"Timesheet_CMU_{nrp}_{nama_clean}.pdf"
-            pdf_path = os.path.abspath(os.path.join(PATH_OUTPUT, pdf_filename))
-            
+    
+            # 1. Tambahkan informasi periode di nama file
+            pdf_filename = f"Timesheet_CMU_{nrp}_{nama_clean}_{periode_str}.pdf"
+    
+            # 2. Buat sub-folder berdasarkan periode (misal: .../CMU/Agustus_2026/)
+            period_folder = os.path.join(PATH_OUTPUT, periode_str)
+            os.makedirs(period_folder, exist_ok=True)
+    
+            # 3. Gabungkan path output akhir
+            pdf_path = os.path.abspath(os.path.join(period_folder, pdf_filename))
+
             ws.ExportAsFixedFormat(0, pdf_path)
-            print(f"✅ Berhasil export: {pdf_filename}")
-            
+            print(f"✅ Berhasil export: {pdf_filename} ke folder {periode_str}")
+
             wb.Close(False)
             
         print("\nSelesai! Semua PDF Timesheet CMU berhasil digenerate.")

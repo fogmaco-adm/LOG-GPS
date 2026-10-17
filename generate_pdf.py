@@ -51,17 +51,23 @@ try:
 
     for nrp in unique_nrps:
         emp_data = df_master[df_master['NRP'] == nrp]
+
+        # 🛡️ PENGAMAN: Lewati jika data karyawan kosong
+        if emp_data.empty:
+            continue
         
         nrp_str = str(nrp).split('.')[0] if '.' in str(nrp) else str(nrp)
-        nama = str(emp_data['Nama'].iloc[0]) if 'Nama' in emp_data.columns else "-"
-        section = str(emp_data['Section'].iloc[0]) if 'Section' in emp_data.columns else "-"
-        job_title = str(emp_data['Job Title'].iloc[0]) if 'Job Title' in emp_data.columns else "-"
+        nama = str(emp_data['Nama'].iloc[0]) if 'Nama' in emp_data.columns and not emp_data['Nama'].empty else "-"
+        section = str(emp_data['Section'].iloc[0]) if 'Section' in emp_data.columns and not emp_data['Section'].empty else "-"
+        job_title = str(emp_data['Job Title'].iloc[0]) if 'Job Title' in emp_data.columns and not emp_data['Job Title'].empty else "-"
 
         # Otomatis deteksi Bulan & Tahun dari data tanggal pertama karyawan
-        raw_date_sample = emp_data['Date'].iloc[0]
-        parsed_date = pd.to_datetime(raw_date_sample, errors='coerce')
+        if 'Date' in emp_data.columns and not emp_data['Date'].empty:
+            raw_date_sample = emp_data['Date'].iloc[0]
+            parsed_date = pd.to_datetime(raw_date_sample, errors='coerce')
+        else:
+            parsed_date = pd.NaT
         if pd.notnull(parsed_date):
-            # Mengubah nama bulan ke dalam bahasa Indonesia (opsional, atau biarkan standar Inggris)
             bulan_dict = {
                 1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April', 
                 5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus', 
@@ -127,7 +133,14 @@ try:
         # Format Nama File PDF otomatis (Contoh: TS_80001861_AL_FAIZAL_WIJAYA_Agustus_2026.pdf)
         nama_bersih = nama.replace(" ", "_")
         pdf_filename = f"TS_{nrp_str}_{nama_bersih}_{periode_str}.pdf"
-        pdf_path = os.path.join(pdf_output_dir, pdf_filename)
+        
+        # --- TAMBAHAN: Buat Sub-Folder per Periode Otomatis ---
+        # Contoh hasil: 3_Output_PDF/NonStaff/September_2026/
+        period_folder = os.path.join(pdf_output_dir, periode_str)
+        os.makedirs(period_folder, exist_ok=True)
+        
+        # Path akhir file PDF masuk ke dalam folder periode tersebut
+        pdf_path = os.path.join(period_folder, pdf_filename)
         
         wb.ExportAsFixedFormat(0, pdf_path)
         wb.Close(False)
