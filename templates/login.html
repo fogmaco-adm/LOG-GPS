@@ -8,32 +8,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #f0f9ff 100%);
+            /* Background Gradasi Navy Soft, Biru, hingga Orange */
+            background: linear-gradient(
+                135deg, 
+                rgba(15, 23, 42, 0.92) 0%,     /* Navy Soft Gelap Transparan */
+                rgba(30, 58, 138, 0.85) 45%,    /* Biru Navy AlamTri */
+                rgba(37, 99, 235, 0.8) 75%,     /* Biru Cerah */
+                rgba(249, 115, 22, 0.85) 100%   /* Orange Aksen Logo AlamTri */
+            );
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-attachment: fixed;
+            margin: 0;
         }
         .card-login {
             width: 100%;
             max-width: 420px;
             padding: 2.5rem;
             border-radius: 18px;
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.15);
-            background: #ffffff;
-            border: 1px solid #e0f2fe;
+            /* Efek kaca buram / glassmorphism di atas background gradasi */
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .btn-soft-blue {
-            background-color: #2563eb;
+            background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
             color: white;
             border: none;
             transition: all 0.3s ease;
         }
         .btn-soft-blue:hover {
-            background-color: #1d4ed8;
+            background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
         }
         .form-control:focus {
             border-color: #38bdf8;
