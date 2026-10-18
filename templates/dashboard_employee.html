@@ -7,125 +7,98 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            background-color: #f8fafc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #1e293b;
-        }
+    body {
+        background-color: #f8fafc;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1e293b;
+    }
 
-        /* Brand Logo */
+    /* Logo & Brand Title di Navbar (Diperbesar untuk Tampilan Desktop) */
+    .brand-logo-original {
+        height: 38px !important; /* Diperbesar dari 28px */
+        width: auto;
+        object-fit: contain;
+    }
+
+    .brand-title {
+        font-size: 1.3rem !important; /* Diperbesar tulisan LOG-GPS */
+    }
+
+    /* Media query khusus HP agar logo tetap proporsional */
+    @media (max-width: 576px) {
         .brand-logo-original {
             height: 28px !important;
-            width: auto;
-            object-fit: contain;
         }
+        .brand-title {
+            font-size: 1.05rem !important;
+        }
+    }
 
-        /* Navbar Dark Navy Slate (Menyatu dengan Login Page) */
-        .navbar-custom {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-            padding: 0.7rem 1.5rem;
-        }
+    /* Navbar Custom */
+    .navbar-custom {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        padding: 0.75rem 1.5rem;
+    }
 
-        /* Card Utama Dashboard */
-        .card-custom {
-            background: #ffffff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
-            overflow: hidden;
-        }
+    /* Tombol Unduh PDF (Diperkecil / Lebih Ringkas) */
+    .btn-download-pdf {
+        background-color: #059669 !important;
+        color: #ffffff !important;
+        border: none !important;
+        font-weight: 500;
+        font-size: 0.82rem !important; /* Ukuran font lebih proporsional */
+        padding: 0.35rem 0.75rem !important; /* Padding disesuaikan */
+        border-radius: 6px !important;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 2px 5px rgba(5, 150, 105, 0.2);
+    }
 
-        .card-header-custom {
-            background-color: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
-            padding: 1.25rem 1.5rem;
-        }
+    .btn-download-pdf:hover {
+        background-color: #047857 !important;
+        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        transform: translateY(-1px);
+    }
 
-        /* Tabel Styling */
-        .table-custom th {
-            background-color: #f8fafc;
-            color: #334155;
-            font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
-            padding: 0.9rem 1rem;
-        }
+    /* Tombol Keluar */
+    .btn-logout {
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.4rem 0.9rem;
+        border: none;
+        transition: background-color 0.2s ease;
+    }
 
-        .table-custom td {
-            padding: 0.9rem 1rem;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        /* Badge Periode / Kategori (Soft Blue Navy) */
-        .badge-periode {
-            background-color: #e0f2fe !important;
-            color: #0369a1 !important;
-            font-weight: 600;
-            padding: 0.45rem 0.85rem;
-            border-radius: 8px;
-            border: 1px solid #bae6fd;
-            display: inline-block;
-            font-size: 0.82rem;
-        }
-
-        /* Tombol Unduh PDF (Aksen Emerald Green) */
-        .btn-download-pdf {
-            background-color: #059669 !important;
-            color: #ffffff !important;
-            border: none !important;
-            font-weight: 500;
-            padding: 0.45rem 1rem;
-            border-radius: 8px;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
-        }
-
-        .btn-download-pdf:hover {
-            background-color: #047857 !important;
-            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35);
-            transform: translateY(-1px);
-        }
-
-        /* Tombol Keluar (Soft Red) */
-        .btn-logout {
-            background-color: #dc2626 !important;
-            color: #ffffff !important;
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 0.4rem 0.9rem;
-            border: none;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-logout:hover {
-            background-color: #b91c1c !important;
-        }
-    </style>
-</head>
-<body>
+    .btn-logout:hover {
+        background-color: #b91c1c !important;
+    }
+</style>
 
     <!-- Navbar Atas (Sejajar Sempurna di HP & Desktop) -->
-    <nav class="navbar navbar-dark navbar-custom py-2">
+    <!-- Navbar Atas -->
+    <nav class="navbar navbar-dark navbar-custom">
         <div class="container-fluid px-2 px-md-4 d-flex align-items-center justify-content-between flex-nowrap">
             
-            <!-- Logo & Title (Sejajar di Kiri) -->
+            <!-- Logo & Title -->
             <a class="navbar-brand fw-bold d-flex align-items-center m-0 p-0 text-truncate" href="#">
                 <img src="{{ url_for('static', filename='alamtri.png') }}" 
                      alt="Logo" 
                      onerror="this.style.display='none';" 
                      class="brand-logo-original me-2">
                 
-                <span class="d-flex align-items-center">
-                    <i class="fa-solid fa-file-lines me-1 fs-6"></i>
-                    <span class="fs-6 fw-bold">LOG-GPS</span> 
+                <span class="d-flex align-items-center brand-title">
+                    <i class="fa-solid fa-file-lines me-2"></i>
+                    <span>LOG-GPS</span> 
                     <small class="fw-normal fs-6 opacity-75 d-none d-md-inline ms-2">| Logistic General Portal System</small>
                 </span>
             </a>
             
-            <!-- User Info & Logout (Sejajar di Kanan) -->
+            <!-- User Info & Logout -->
             <div class="d-flex align-items-center ms-2 flex-shrink-0">
                 <span class="text-white me-3 d-none d-md-inline small">Halo, <b>{{ user.nama }}</b> ({{ user.perusahaan }})</span>
-                <a href="/logout" class="btn btn-logout btn-sm py-1 px-2 px-md-3" style="font-size: 0.8rem;">
+                <a href="/logout" class="btn btn-logout btn-sm py-1 px-2 px-md-3" style="font-size: 0.85rem;">
                     <i class="fa-solid fa-right-from-bracket me-1"></i>Keluar
                 </a>
             </div>
