@@ -15,7 +15,7 @@
 
         /* Brand Logo */
         .brand-logo-original {
-            height: 40px; 
+            height: 28px !important;
             width: auto;
             object-fit: contain;
         }
@@ -104,27 +104,32 @@
 </head>
 <body>
 
-    <!-- Navbar Atas -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-2">
-        <div class="container-fluid px-md-4">
-            <a class="navbar-brand fw-bold d-flex align-items-center p-0 me-2 my-auto" href="#">
-                <!-- Gambar Logo -->
+    <!-- Navbar Atas (Sejajar Sempurna di HP & Desktop) -->
+    <nav class="navbar navbar-dark navbar-custom py-2">
+        <div class="container-fluid px-2 px-md-4 d-flex align-items-center justify-content-between flex-nowrap">
+            
+            <!-- Logo & Title (Sejajar di Kiri) -->
+            <a class="navbar-brand fw-bold d-flex align-items-center m-0 p-0 text-truncate" href="#">
                 <img src="{{ url_for('static', filename='alamtri.png') }}" 
                      alt="Logo" 
                      onerror="this.style.display='none';" 
                      class="brand-logo-original me-2">
                 
-                <!-- Brand Title -->
-                <span class="fs-4 d-flex align-items-center">
-                    <i class="fa-solid fa-file-lines me-2"></i>LOG-GPS 
-                    <small class="fw-normal fs-6 opacity-75 d-none d-sm-inline ms-2">| Logistic General Portal System</small>
+                <span class="d-flex align-items-center">
+                    <i class="fa-solid fa-file-lines me-1 fs-6"></i>
+                    <span class="fs-6 fw-bold">LOG-GPS</span> 
+                    <small class="fw-normal fs-6 opacity-75 d-none d-md-inline ms-2">| Logistic General Portal System</small>
                 </span>
             </a>
             
-            <div class="d-flex align-items-center ms-auto my-auto">
-                <span class="text-white me-3 d-none d-md-inline">Halo, <b>{{ user.nama }}</b> ({{ user.perusahaan }})</span>
-                <a href="/logout" class="btn btn-logout btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i>Keluar</a>
+            <!-- User Info & Logout (Sejajar di Kanan) -->
+            <div class="d-flex align-items-center ms-2 flex-shrink-0">
+                <span class="text-white me-3 d-none d-md-inline small">Halo, <b>{{ user.nama }}</b> ({{ user.perusahaan }})</span>
+                <a href="/logout" class="btn btn-logout btn-sm py-1 px-2 px-md-3" style="font-size: 0.8rem;">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i>Keluar
+                </a>
             </div>
+
         </div>
     </nav>
 

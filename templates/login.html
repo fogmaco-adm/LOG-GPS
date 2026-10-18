@@ -13,7 +13,7 @@
                 135deg, 
                 rgba(15, 23, 42, 0.92) 0%,     /* Navy Soft Gelap Transparan */
                 rgba(30, 58, 138, 0.85) 45%,    /* Biru Navy AlamTri */
-                rgba(37, 99, 235, 0.8) 75%,     /* Biru Cerah */
+                rgba(41, 75, 148, 0.8) 75%,     /* Biru Cerah */
                 rgba(249, 115, 22, 0.85) 100%   /* Orange Aksen Logo AlamTri */
             );
             min-height: 100vh;
@@ -23,20 +23,24 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-attachment: fixed;
             margin: 0;
+            padding: 1.5rem; /* Memberi jarak aman dari pinggir layar HP */
         }
         .card-login {
             width: 100%;
-            max-width: 420px;
-            padding: 2.5rem;
+            max-width: 360px; /* Diperkecil dari 420px agar proporsional di HP */
+            padding: 1.8rem 1.5rem; /* Padding dalam dibuat lebih ringkas */
             border-radius: 18px;
-            /* Efek kaca buram / glassmorphism di atas background gradasi */
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(10px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
+        /* Ukuran Logo di HP disesuaikan sedikit agar pas */
+        .card-login img {
+            height: 60px !important; 
+        }
         .btn-soft-blue {
-            background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
+            background: linear-gradient(135deg, #1b3075 0%, #2f68e3 100%);
             color: white;
             border: none;
             transition: all 0.3s ease;
