@@ -40,7 +40,7 @@
             padding: 0.75rem 1.5rem;
         }
 
-        /* Badge Periode Timesheet (Dipaksa warna biru kontras, anti putih) */
+        /* Badge Periode Timesheet */
         .badge-periode {
             background-color: #e0f2fe !important;
             color: #0369a1 !important;
@@ -52,7 +52,7 @@
             font-size: 0.82rem !important;
         }
 
-        /* Tombol Unduh PDF (Ramping / Compact & Rapi) */
+        /* Tombol Unduh PDF */
         .btn-download-pdf {
             background-color: #059669 !important;
             color: #ffffff !important;
@@ -124,7 +124,7 @@
     <!-- Konten Utama -->
     <div class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-md-10">
+            <div class="col-md-11">
                 
                 <!-- Flash Message -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -153,6 +153,7 @@
                                             <th scope="col" style="width: 50px;">No</th>
                                             <th scope="col">Nama File</th>
                                             <th scope="col" class="text-center">Periode Timesheet</th>
+                                            <th scope="col" class="text-center">Status Validasi</th>
                                             <th scope="col" class="text-end">Aksi</th>
                                         </tr>
                                     </thead>
@@ -162,10 +163,92 @@
                                             <th scope="row" class="text-muted">{{ loop.index }}</th>
                                             <td><i class="fa-solid fa-file-pdf text-danger me-2 fs-5"></i>{{ f.filename }}</td>
                                             <td class="text-center"><span class="badge badge-periode">{{ f.category }}</span></td>
+                                            
+                                            <!-- Kolom Status -->
+                                            <td class="text-center">
+                                                {% if f.status == 'APPROVED' %}
+                                                    <span class="badge bg-success"><i class="fa-solid fa-circle-check me-1"></i>Approved</span>
+                                                {% elif f.status == 'REVISION' %}
+                                                    <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Revisi</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Pending</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <!-- Kolom Tombol Aksi -->
                                             <td class="text-end">
-                                                <a href="/download/{{ f.subfolder }}" class="btn btn-download-pdf">
-                                                    <i class="fa-solid fa-download"></i> Unduh PDF
-                                                </a>
+                                                <div class="d-inline-flex gap-1">
+                                                    <!-- Tombol Unduh PDF -->
+                                                    <a href="/download/{{ f.subfolder }}" class="btn btn-download-pdf" title="Unduh PDF">
+                                                        <i class="fa-solid fa-download"></i> Unduh
+                                                    </a>
+
+                                                   {% if f.status == 'APPROVED' %}
+                                                        <!-- Jika sudah disetujui, tampilkan badge teks hijau (tidak bisa diklik) -->
+                                                        <span class="badge bg-success px-3 py-2" style="font-size: 0.78rem;">
+                                                            <i class="fa-solid fa-check-circle"></i> Disetujui
+                                                        </span>
+                                                    {% else %}
+                                                        <!-- Jika belum, tampilkan tombol Setujui & Revisi -->
+                                                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalApprove{{ loop.index }}" style="font-size: 0.78rem; padding: 0.3rem 0.6rem;">
+                                                            <i class="fa-solid fa-check"></i> Setujui
+                                                        </button>
+
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRevision{{ loop.index }}" style="font-size: 0.78rem; padding: 0.3rem 0.6rem;">
+                                                            <i class="fa-solid fa-pen"></i> Revisi
+                                                        </button>
+                                                    {% endif %} 
+                                                </div>
+
+                                                <!-- MODAL POP-UP SETUJUI -->
+                                                <div class="modal fade text-start" id="modalApprove{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-success text-white py-2">
+                                                                <h6 class="modal-title m-0"><i class="fa-solid fa-shield-check me-2"></i>Konfirmasi Validasi Timesheet</h6>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form action="/approve_timesheet" method="POST">
+                                                                <div class="modal-body small">
+                                                                    <p class="mb-2">Apakah Anda yakin file <strong>{{ f.filename }}</strong> sudah SESUAI?</p>
+                                                                    <div class="alert alert-info py-2 mb-0 small">
+                                                                        <i class="fa-solid fa-info-circle me-1"></i> Dokumen akan otomatis dibubuhi stempel digital:<br>
+                                                                        <strong class="d-block mt-1 text-dark">"Digitally Signed by {{ user.nrp }} [Waktu Realtime]"</strong>
+                                                                    </div>
+                                                                    <input type="hidden" name="file_id" value="{{ f.filename }}">
+                                                                </div>
+                                                                <div class="modal-footer py-1">
+                                                                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-success btn-sm">Ya, Setujui & TTD</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- MODAL POP-UP REVISI -->
+                                                <div class="modal fade text-start" id="modalRevision{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-danger text-white py-2">
+                                                                <h6 class="modal-title m-0"><i class="fa-solid fa-pen-to-square me-2"></i>Form Pengajuan Revisi</h6>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form action="/submit_revision" method="POST">
+                                                                <div class="modal-body small">
+                                                                    <p class="mb-2">Tuliskan bagian mana yang tidak sesuai pada <strong>{{ f.filename }}</strong>:</p>
+                                                                    <textarea name="catatan_revisi" class="form-control form-control-sm" rows="3" placeholder="Contoh: Tanggal 5 Sep jam masuk harusnya 06.30, bukan Night." required></textarea>
+                                                                    <input type="hidden" name="file_id" value="{{ f.filename }}">
+                                                                </div>
+                                                                <div class="modal-footer py-1">
+                                                                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
+                                                                    <button type="submit" class="btn btn-danger btn-sm">Kirim Catatan</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -173,7 +256,7 @@
                                 </table>
                             </div>
                         {% else %}
-                            <div class="text-center py-5">
+                            <div class="container text-center py-5">
                                 <i class="fa-solid fa-triangle-exclamation text-warning fa-3x mb-3"></i>
                                 <h6 class="text-muted">Belum ada file timesheet yang ditemukan untuk akun Anda.</h6>
                                 <p class="text-muted small">Silakan hubungi administrator jika Anda merasa ini adalah kesalahan.</p>

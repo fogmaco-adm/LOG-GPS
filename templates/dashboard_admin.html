@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Portal Timesheet</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+        .navbar-brand img {
+            height: 36px;
+            object-fit: contain;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #0d6efd;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #212529 !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+        }
+        .accordion-button {
+            background-color: #212529;
+            color: #ffffff;
+        }
+        .accordion-button::after {
+            filter: brightness(0) invert(1);
+        }
+        .sub-tab .nav-link {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        .sub-tab .nav-link.active {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            background: transparent;
+        }
+    </style>
+    
+</head>
+<body>
+
+    <!-- NAVBAR HEADER -->
+    <nav class="navbar navbar-dark bg-dark px-4 shadow-sm">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+            <img src="{{ url_for('static', filename='alamtri_login.png') }}" alt="AlamTri Logo" onerror="this.onerror=null; this.src='{{ url_for('static', filename='alamtri_login.jpg') }}';">
+            <span class="text-white-50">|</span> 
+            <i class="fa-solid fa-shield-halved text-warning"></i> LOG-GPS Admin Portal
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-light">Halo, <b>{{ session['user']['nama'] }}</b> (Admin)</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">
+                <i class="fa-solid fa-right-from-bracket"></i> Keluar
+            </a>
+        </div>
+    </nav>
+
+    <!-- KONTROL UTAMA DASHBOARD ADMIN -->
+    <div class="container my-4">
+        
+        <!-- Flash Messages Notifikasi -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="fa-solid fa-list-check text-primary me-2"></i> Monitoring & Manajemen Status Timesheet
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">
+                    Berikut adalah daftar file timesheet Nonstaff dan LS Logistik
+                    <i class="fa-solid fa-arrow-right mx-1 text-primary"></i> Kategori 
+                    <i class="fa-solid fa-arrow-right mx-1 text-primary"></i> Bulan.
+                </p>
+
+                <!-- TAB PERUSAHAAN (BMP, CMU, NONSTAFF) -->
+                <ul class="nav nav-tabs mb-4" id="companyTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="bmp-tab" data-bs-toggle="tab" data-bs-target="#bmp" type="button" role="tab">
+                            <i class="fa-solid fa-building me-1"></i> PT. BMP
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="cmu-tab" data-bs-toggle="tab" data-bs-target="#cmu" type="button" role="tab">
+                            <i class="fa-solid fa-building me-1"></i> PT. CMU
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="nonstaff-tab" data-bs-toggle="tab" data-bs-target="#nonstaff" type="button" role="tab">
+                            <i class="fa-solid fa-users me-1"></i> NonStaff
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- TAB CONTENT PERUSAHAAN -->
+                <div class="tab-content" id="companyTabContent">
+                    
+                    {% for comp_code in ['BMP', 'CMU', 'NONSTAFF'] %}
+                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="{{ comp_code|lower }}" role="tabpanel">
+                        
+                        {% if files_by_company[comp_code] %}
+                            <!-- ACCORDION UTAMA: KATEGORI (FOG MINING, WAREHOUSE MINING, DLL) -->
+                            <div class="accordion" id="acc_{{ comp_code }}">
+                                {% for category_name, month_dict in files_by_company[comp_code].items() %}
+                                {% set acc_id = comp_code ~ '_' ~ loop.index %}
+                                <div class="accordion-item mb-3 border shadow-sm rounded overflow-hidden">
+                                    
+                                    <!-- HEADER KATEGORI -->
+                                    <!-- HEADER KATEGORI -->
+                                    <h2 class="accordion-header d-flex align-items-center bg-dark text-white p-2" id="heading_{{ acc_id }}">
+                                        <button class="accordion-button {% if not loop.first %}collapsed{% endif %} flex-grow-1 bg-dark text-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{ acc_id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapse_{{ acc_id }}">
+                                            <i class="fa-solid fa-folder-open text-warning me-2 fs-5"></i>
+                                            <span>Kategori: <strong class="text-white">{{ category_name }}</strong></span>
+                                        </button>
+                                        <!-- Tombol Download All Approved ZIP Per Kategori dengan Lebar Seragam -->
+                                        <div class="pe-2 ps-2">
+                                            <a href="{{ url_for('admin_download_zip', company=comp_code, category=category_name) }}" class="btn btn-success btn-sm text-nowrap" style="min-width: 230px;">
+                                                <i class="fa-solid fa-file-zipper me-1"></i> Download All ZIP ({{ category_name }})
+                                            </a>
+                                        </div>
+                                    </h2>
+
+                                    <!-- ISI KATEGORI: SUB TAB PER BULAN -->
+                                    <div id="collapse_{{ acc_id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading_{{ acc_id }}" data-bs-parent="#acc_{{ comp_code }}">
+                                        <div class="accordion-body p-3">
+                                            
+                                            <!-- SUB TAB PER BULAN -->
+                                            <ul class="nav nav-tabs sub-tab mb-3" id="subTab_{{ acc_id }}" role="tablist">
+                                                {% for periode_name in month_dict.keys() %}
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link {% if loop.first %}active{% endif %}" id="tab_btn_{{ acc_id }}_{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#tab_content_{{ acc_id }}_{{ loop.index }}" type="button" role="tab">
+                                                        <i class="fa-solid fa-calendar-days me-1"></i> Periode: {{ periode_name }} ({{ month_dict[periode_name]|length }} File)
+                                                    </button>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                {% for periode_name, file_list in month_dict.items() %}
+                                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab_content_{{ acc_id }}_{{ loop.index }}" role="tabpanel">
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted small">Daftar PDF Periode: <strong>{{ periode_name }}</strong></span>
+                                                        <a href="{{ url_for('admin_download_zip', company=comp_code, category=category_name, periode=periode_name) }}" class="btn btn-outline-success btn-sm">
+                                                            <i class="fa-solid fa-download me-1"></i> Download Approved ZIP ({{ periode_name }})
+                                                        </a>
+                                                    </div>
+
+                                                    <!-- TABEL FILE PDF -->
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover align-middle border mb-0">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th style="width: 50px;">No</th>
+                                                                    <th>Nama File Timesheet</th>
+                                                                    <th style="width: 150px;">Status Validasi</th>
+                                                                    <th style="width: 180px;" class="text-center">Aksi Admin</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for f in file_list %}
+                                                                <tr>
+                                                                    <td>{{ loop.index }}</td>
+                                                                    <td><i class="fa-solid fa-file-pdf text-danger me-2"></i> {{ f.file_name }}</td>
+                                                                    <td>
+                                                                        {% if f.status == 'APPROVED' %}
+                                                                            <span class="badge bg-success px-2 py-1"><i class="fa-solid fa-check-circle"></i> Approved</span>
+                                                                        {% else %}
+                                                                            <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-clock"></i> Pending</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        {% if f.status == 'APPROVED' %}
+                                                                        <form action="{{ url_for('admin_reset_status', file_name=f.file_name) }}" method="POST" style="display:inline;">
+                                                                            <button type="submit" class="btn btn-warning btn-sm px-3" onclick="return confirm('Yakin ingin mereset status file ini kembali ke Pending?');">
+                                                                                <i class="fa-solid fa-rotate-left"></i> Reset Status
+                                                                            </button>
+                                                                        </form>
+                                                                        {% else %}
+                                                                            <span class="text-muted small">-</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-5 bg-white rounded border">
+                                <i class="fa-solid fa-folder-open fs-1 text-secondary mb-3 d-block"></i>
+                                Belum ada file timesheet untuk kategori ini.
+                            </div>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
