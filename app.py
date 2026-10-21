@@ -225,70 +225,78 @@ def admin_download_zip(company, category):
         return redirect(url_for('login'))
         
     company = company.upper()
-    target_periode = request.args.get('periode') # Filter sub-bulan opsional
+    target_periode = request.args.get('periode')
     
-    conn = get_db_connection()
-    approved_rows = conn.execute("SELECT file_name FROM timesheet_status WHERE status = 'APPROVED'").fetchall()
-    conn.close()
-    
-    approved_files = [row['file_name'] for row in approved_rows]
-    
-    memory_file = io.BytesIO()
-    found_count = 0
-    
-    month_keywords = ['2025', '2026', 'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 
-                      'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER']
-    
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for root, dirs, files in os.walk(PATH_OUTPUT_ROOT):
-            for file in files:
-                if file in approved_files and file.lower().endswith('.pdf'):
-                    file_upper = file.upper()
-                    root_upper = root.upper()
-                    
-                    is_comp_match = False
-                    if company == 'BMP' and ('BMP' in file_upper or 'BMP' in root_upper):
-                        is_comp_match = True
-                    elif company == 'CMU' and ('CMU' in file_upper or 'CMU' in root_upper):
-                        is_comp_match = True
-                    elif company == 'NONSTAFF' and ('BMP' not in file_upper and 'CMU' not in file_upper and 'BMP' not in root_upper and 'CMU' not in root_upper):
-                        is_comp_match = True
-                        
-                    rel_dir = os.path.relpath(root, PATH_OUTPUT_ROOT)
-                    parts = [p for p in rel_dir.split(os.sep) if p and p != '.']
-                    
-                    file_category = 'General'
-                    file_periode = 'Umum'
-                    
-                    for part in parts:
-                        part_upper = part.upper()
-                        if part_upper in ['BMP', 'CMU', 'NONSTAFF', 'NON_STAFF']:
-                            continue
-                        if any(m in part_upper for m in month_keywords):
-                            file_periode = part
-                        else:
-                            file_category = part
-                    
-                    if is_comp_match and file_category == category:
-                        if not target_periode or target_periode == file_periode:
-                            file_path = os.path.join(root, file)
-                            arc_name = os.path.join(file_periode, file) if not target_periode else file
-                            zf.write(file_path, arcname=arc_name)
-                            found_count += 1
-                        
-    if found_count == 0:
-        flash(f"Tidak ada file Approved yang ditemukan untuk {company} - Kategori {category}.", "warning")
-        return redirect(url_for('admin_dashboard'))
+    try:
+        conn = get_db_connection()
+        approved_rows = conn.execute("SELECT file_name FROM timesheet_status WHERE status = 'APPROVED'").fetchall()
+        conn.close()
         
-    memory_file.seek(0)
-    zip_name = f'Timesheet_Approved_{company}_{category}.zip' if not target_periode else f'Timesheet_Approved_{company}_{category}_{target_periode}.zip'
-    
-    return send_file(
-        memory_file,
-        mimetype='application/zip',
-        as_attachment=True,
-        download_name=zip_name
-    )
+        approved_files = {row['file_name'] for row in approved_rows}
+        
+        memory_file = io.BytesIO()
+        found_count = 0
+        
+        month_keywords = ['2025', '2026', '2027', 'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 
+                          'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER']
+        
+        if os.path.exists(PATH_OUTPUT_ROOT):
+            with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for root, dirs, files in os.walk(PATH_OUTPUT_ROOT):
+                    for file in files:
+                        if file in approved_files and file.lower().endswith('.pdf'):
+                            file_upper = file.upper()
+                            root_upper = root.upper()
+                            
+                            is_comp_match = False
+                            if company == 'BMP' and ('BMP' in file_upper or 'BMP' in root_upper):
+                                is_comp_match = True
+                            elif company == 'CMU' and ('CMU' in file_upper or 'CMU' in root_upper):
+                                is_comp_match = True
+                            elif company == 'NONSTAFF' and ('BMP' not in file_upper and 'CMU' not in file_upper and 'BMP' not in root_upper and 'CMU' not in root_upper):
+                                is_comp_match = True
+                                
+                            rel_dir = os.path.relpath(root, PATH_OUTPUT_ROOT)
+                            parts = [p for p in rel_dir.split(os.sep) if p and p != '.']
+                            
+                            file_category = 'General'
+                            file_periode = 'Umum'
+                            
+                            for part in parts:
+                                part_upper = part.upper()
+                                if part_upper in ['BMP', 'CMU', 'NONSTAFF', 'NON_STAFF']:
+                                    continue
+                                if any(m in part_upper for m in month_keywords):
+                                    file_periode = part
+                                else:
+                                    file_category = part
+                            
+                            # Cocokkan kategori dan periode (jika ada filter periode)
+                            if is_comp_match and file_category.strip().lower() == category.strip().lower():
+                                if not target_periode or target_periode.strip().lower() == file_periode.strip().lower():
+                                    file_path = os.path.join(root, file)
+                                    if os.path.exists(file_path):
+                                        zf.write(file_path, arcname=file)
+                                        found_count += 1
+                                
+        if found_count == 0:
+            flash(f"Tidak ada file Approved yang ditemukan untuk {company} - Kategori {category}.", "warning")
+            return redirect(url_for('admin_dashboard'))
+            
+        memory_file.seek(0)
+        zip_name = f'Timesheet_Approved_{company}_{category}.zip' if not target_periode else f'Timesheet_Approved_{company}_{category}_{target_periode}.zip'
+        
+        return send_file(
+            memory_file,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=zip_name
+        )
+        
+    except Exception as e:
+        print(f"ERROR DOWNLOAD ZIP: {e}")
+        flash(f"Terjadi kesalahan saat memproses file ZIP: {str(e)}", "danger")
+        return redirect(url_for('admin_dashboard'))
 
 # --- ROUTE ADMIN: RESET STATUS TIMESHEET ---
 @app.route('/admin/reset_status/<path:file_name>', methods=['POST'])
