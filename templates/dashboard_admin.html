@@ -78,10 +78,16 @@
         {% endwith %}
 
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold text-dark">
                     <i class="fa-solid fa-list-check text-primary me-2"></i> Monitoring & Manajemen Status Timesheet
                 </h5>
+                <!-- Tombol Reset All PDF & Database -->
+                <form action="{{ url_for('admin_reset_all_files') }}" method="POST" onsubmit="return confirm('PERHATIAN: Apakah Anda yakin ingin MENGHAPUS SELURUH PDF timesheet dan MERESET semua status ke awal? Tindakan ini tidak dapat dibatalkan!');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm fw-semibold">
+                        <i class="fa-solid fa-trash-can me-1"></i> Reset All PDF & DB
+                    </button>
+                </form>
             </div>
             <div class="card-body">
                 <p class="text-muted small">
@@ -122,7 +128,6 @@
                                 {% set acc_id = comp_code ~ '_' ~ loop.index %}
                                 <div class="accordion-item mb-3 border shadow-sm rounded overflow-hidden">
                                     
-                                    <!-- HEADER KATEGORI -->
                                     <!-- HEADER KATEGORI -->
                                     <h2 class="accordion-header d-flex align-items-center bg-dark text-white p-2" id="heading_{{ acc_id }}">
                                         <button class="accordion-button {% if not loop.first %}collapsed{% endif %} flex-grow-1 bg-dark text-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{{ acc_id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapse_{{ acc_id }}">

@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import io
 import zipfile
+import shutil
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, flash, send_file
 from pypdf import PdfReader, PdfWriter
@@ -442,6 +443,38 @@ def submit_revision():
         flash(f"Gagal mengirim catatan revisi: {e}", "danger")
         
     return redirect(url_for('dashboard'))
+
+@app.route('/admin/reset_all_files', methods=['POST'])
+def admin_reset_all_files():
+    if 'user' not in session or not session['user'].get('is_admin'):
+        return redirect(url_for('login'))
+        
+    try:
+        # 1. Bersihkan database status timesheet
+        conn = get_db_connection()
+        conn.execute('DELETE FROM timesheet_status')
+        conn.commit()
+        conn.close()
+        
+        # 2. Hapus semua file PDF di folder output
+        count_deleted = 0
+        if os.path.exists(PATH_OUTPUT_ROOT):
+            for root, dirs, files in os.walk(PATH_OUTPUT_ROOT):
+                for file in files:
+                    if file.lower().endswith('.pdf'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            os.remove(file_path)
+                            count_deleted += 1
+                        except Exception as file_err:
+                            print(f"Gagal menghapus {file_path}: {file_err}")
+                            
+        flash(f"Berhasil mereset sistem! {count_deleted} file PDF percobaan dihapus dan status database telah dibersihkan.", "success")
+    except Exception as e:
+        print(f"Error reset all files: {e}")
+        flash(f"Terjadi kesalahan saat mereset file: {str(e)}", "danger")
+        
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/logout')
 def logout():
