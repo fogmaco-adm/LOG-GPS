@@ -1,12 +1,3 @@
 token.json
 credentials.json
 ~$*.xlsx
-# Abaikan folder output PDF
-3_Output_PDF/
-
-# Abaikan file database lokal
-database.db
-
-# Abaikan cache Python
-__pycache__/
-*.pyc
