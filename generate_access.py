@@ -57,22 +57,52 @@ def build_access_list():
             
         print(f"📖 Membaca {src['file']}...")
         try:
-            # Baca file excel tanpa baris header otomatis, ambil berdasarkan posisi kolom (B=Kolom indeks 1, C=Kolom indeks 2)
-            df = pd.read_excel(file_path, header=None, dtype=str)
+            # Baca file excel dengan deteksi header otomatis
+            df_raw = pd.read_excel(file_path, dtype=str)
             
-            # Mulai dari baris ke-1 (baris ke-0 adalah judul/header tabel)
-            for index, row in df.iterrows():
-                if index == 0:
-                    continue
+            # Deteksi baris header secara fleksibel
+            col_nrp = None
+            col_nama = None
+            
+            for col in df_raw.columns:
+                col_str = str(col).upper()
+                if "NRP" in col_str or "NIK" in col_str:
+                    col_nrp = col
+                elif "NAMA" in col_str:
+                    col_nama = col
+            
+            # Jika header tidak ketemu di baris pertama, coba baca ulang tanpa header
+            if not col_nrp or not col_nama:
+                df = pd.read_excel(file_path, header=None, dtype=str)
+                # Cari baris yang berisi kata NRP/NAMA
+                for idx, row in df.iterrows():
+                    row_vals = [str(x).upper() for x in row.values if pd.notna(x)]
+                    if any("NRP" in v for v in row_vals):
+                        # Set header dari baris ini
+                        df.columns = df.iloc[idx]
+                        df = df.iloc[idx+1:].reset_index(drop=True)
+                        break
                 
-                nrp_raw = row[1] if len(row) > 1 else None  # Kolom B (NRP)
-                name_raw = row[2] if len(row) > 2 else None  # Kolom C (Nama)
+                # Re-check nama kolom
+                for col in df.columns:
+                    col_str = str(col).upper()
+                    if "NRP" in col_str or "NIK" in col_str:
+                        col_nrp = col
+                    elif "NAMA" in col_str:
+                        col_nama = col
+
+            if not col_nrp or not col_nama:
+                print(f"⚠️ Tidak dapat menemukan kolom NRP/NAMA di {src['file']}")
+                continue
+
+            for _, row in df_raw.iterrows():
+                nrp_raw = row.get(col_nrp)
+                name_raw = row.get(col_nama)
                 
                 nrp = clean_nrp(nrp_raw)
                 name = str(name_raw).strip() if pd.notna(name_raw) else ""
                 
-                # Validasi baris kosong atau tidak valid
-                if not nrp or not name or name.lower() == 'nan' or nrp.lower() == 'nan':
+                if not nrp or not name or name.lower() == 'nan' or nrp.lower() == 'nan' or "NRP" in nrp.upper():
                     continue
                     
                 # Gunakan PIN lama jika sudah ada, atau buat baru jika karyawan baru
@@ -98,7 +128,6 @@ def build_access_list():
         
     # Simpan ke file Excel terpusat
     df_result = pd.DataFrame(all_data)
-    # Hapus duplikat berdasarkan NRP jika ada
     df_result = df_result.drop_duplicates(subset=['NRP']).sort_values(by=["Perusahaan", "Nama"]).reset_index(drop=True)
     
     df_result.to_excel(OUTPUT_EXCEL, index=False)

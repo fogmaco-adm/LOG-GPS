@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import win32com.client as win32
 import subprocess
+from datetime import datetime
 
 # Matikan paksa proses Excel yang nyangkut di background agar tidak 'Call was rejected by callee'
 os.system("taskkill /f /im excel.exe >nul 2>&1")
@@ -16,7 +17,7 @@ def round_to_half(val):
 def generate_bmp_timesheets():
     print("Sedang memproses Timesheet BMP & mengambil data dari sheet SPL...")
     
-    # 1. Definisikan base_dir di sini
+    # 1. Definisikan base_dir
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
     # 2. Tentukan path file master dan template
@@ -35,7 +36,7 @@ def generate_bmp_timesheets():
     try:
         df_absensi = pd.read_excel(master_path, sheet_name="MASTER ABSENSI")
         df_absensi.columns = [str(c).strip() for c in df_absensi.columns]
-        
+
         try:
             df_spl = pd.read_excel(master_path, sheet_name="SPL")
             df_spl.columns = [str(c).strip() for c in df_spl.columns]
@@ -89,10 +90,10 @@ def generate_bmp_timesheets():
             # Tentukan path sub-folder kategori di dalam folder output
             folder_kategori = os.path.join(output_dir, kategori_clean)
             if not os.path.exists(folder_kategori):
-                os.makedirs(folder_kategori)
+                os.makedirs(folder_kategori, exist_ok=True)
                 print(f"📁 Membuat sub-folder kategori: {kategori_clean}")
                             
-            # Ambil Aktifitas Kerja langsung dari kolom F master Excel
+            # Ambil Aktifitas Kerja langsung dari kolom master Excel
             aktifitas_master = str(row_emp.get('Aktifitas Kerja', row_emp.get('AKTIFITAS KERJA', 'Pekerjaan operasional rutin'))).strip()
             if pd.isna(row_emp.get('Aktifitas Kerja')) or aktifitas_master == "":
                 aktifitas_master = "Pekerjaan operasional rutin"
@@ -120,44 +121,75 @@ def generate_bmp_timesheets():
             ws.Cells(8, 8).Value = nrp_str
             ws.Cells(9, 7).Value = ":"
             
-            # Periode default
-            periode_header = "SEPTEMBER 2026"
+            # --- AMBIL PERIODE DARI HEADER EXCEL MASTER ---
+            try:
+                # Cari kolom tanggal pertama (biasanya di kolom index ke-8 atau setelah 'Hari ke-')
+                col_list_temp = list(df_absensi.columns)
+                idx_hk = next((i for i, c in enumerate(col_list_temp) if "Hari ke" in str(c)), 7)
+                kolom_tgl = str(col_list_temp[idx_hk + 1]).strip()
+    
+                dt_parsed = pd.to_datetime(kolom_tgl, errors='coerce')
+    
+                if pd.notna(dt_parsed):
+                    bulan_indo = ["", "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", 
+                                  "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"]
+                    periode_header = f"{bulan_indo[dt_parsed.month]} {dt_parsed.year}"
+                else:
+                    periode_header = "SEPTEMBER 2026"
+            except Exception as e:
+                periode_header = "SEPTEMBER 2026"
+
             ws.Cells(9, 8).Value = periode_header
-
-            # Penentuan string periode untuk folder/file (misal: "September_2026")
             periode_parts = periode_header.strip().title().split()
-            periode_str = "_".join(periode_parts) if len(periode_parts) >= 2 else periode_header.strip().replace(" ", "_")
+            periode_str = "_".join(periode_parts)
 
-            # 2. Looping Tanggal 1 sampai 31 (Baris 13 s/d 43)
+            # --- 2. LOOPING TANGGAL 1 SAMPAI 31 (Baris 13 s/d 43) -----
+            col_list = list(df_absensi.columns)
+            idx_hari_ke = -1
+            for idx, c in enumerate(col_list):
+                if "Hari ke" in str(c):
+                    idx_hari_ke = idx
+                    break
+
             for r in range(13, 44):
-                day_num = r - 12  
-                current_hari_ke = ((start_hari_ke + day_num - 2) % 14) + 1
+                day_num = r - 12  # Tanggal 1, 2, 3... 31
+                
+                # Hitung Hari Ke- dengan siklus 14 hari (1 s/d 14)
+                current_hari_ke = ((start_hari_ke + (day_num - 1) - 1) % 14) + 1
                 
                 target_col = None
-                for col in df_absensi.columns:
-                    col_str = str(col).strip()
-                    if col_str.endswith('.0'):
-                        col_str = col_str[:-2]
-                    
-                    try:
-                        if col_str.isdigit() and int(col_str) == day_num:
-                            target_col = col
-                            break
-                    except:
-                        pass
+                if idx_hari_ke != -1 and (idx_hari_ke + day_num) < len(col_list):
+                    target_col = col_list[idx_hari_ke + day_num]
+
+                # VALIDASI: Jika tanggal 31 tapi kolom di master tidak ada (misal September cuma 30 hari)
+                # Maka kosongkan total seluruh sel di baris ini agar tidak menerobos garis tabel
+                if target_col is None or target_col not in df_absensi.columns or pd.isna(row_emp.get(target_col)) and day_num > 30:
+                    ws.Cells(r, 3).Value = ""  # Tanggal
+                    ws.Cells(r, 4).Value = ""  # Lokasi
+                    ws.Cells(r, 5).Value = ""  # Hari Ke
+                    ws.Cells(r, 6).Value = ""  # Shift
+                    ws.Cells(r, 7).Value = ""  # In
+                    ws.Cells(r, 8).Value = ""  # Out
+                    ws.Cells(r, 9).Value = ""  # SPL In
+                    ws.Cells(r, 10).Value = "" # SPL Out
+                    ws.Cells(r, 11).Value = "" # Total SPL
+                    ws.Cells(r, 12).Value = "" # Total Jam Kerja
+                    ws.Cells(r, 13).Value = "" # Aktifitas
+                    continue
 
                 in_time = "-"
                 out_time = "-"
                 shift_str = ""
                 
-                if target_col is not None:
+                # Default info baris
+                ws.Cells(r, 3).Value = f"{day_num}-Sept-2026"  # Kolom C: Tanggal
+                ws.Cells(r, 4).Value = lokasi_kerja          # Kolom D: Lokasi
+                ws.Cells(r, 5).Value = current_hari_ke       # Kolom E: Hari Ke-
+
+                if target_col and target_col in df_absensi.columns:
                     shift_val = row_emp[target_col]
                     
-                    ws.Cells(r, 3).Value = f"{day_num}-Sept-2026"  # Kolom C: Tanggal
-                    ws.Cells(r, 4).Value = lokasi_kerja          # Kolom D: Lokasi
-                    ws.Cells(r, 5).Value = current_hari_ke       # Kolom E: Hari Ke-
-
-                    if pd.notnull(shift_val):
+                    if pd.notnull(shift_val) and str(shift_val).strip() != "":
                         shift_str = str(shift_val).strip().upper()
                         ws.Cells(r, 6).Value = shift_str         # Kolom F: Shift
                         
@@ -198,13 +230,16 @@ def generate_bmp_timesheets():
                         elif shift_str == 'A':
                             ws.Cells(r, 13).Value = "ALPHA"
                         else:
-                            ws.Cells(r, 13).Value = "IZIN / HADIR KHUSUS"
+                            ws.Cells(r, 13).Value = "HADIR KHUSUS"
                     else:
                         ws.Cells(r, 6).Value = "OFF"
                         ws.Cells(r, 13).Value = "LIBUR"
+                else:
+                    ws.Cells(r, 6).Value = "OFF"
+                    ws.Cells(r, 13).Value = "LIBUR"
 
-                    ws.Cells(r, 7).Value = in_time   # Kolom G: Jam Masuk Normal
-                    ws.Cells(r, 8).Value = out_time  # Kolom H: Jam Keluar Normal
+                ws.Cells(r, 7).Value = in_time   # Kolom G: Jam Masuk Normal
+                ws.Cells(r, 8).Value = out_time  # Kolom H: Jam Keluar Normal
 
                 # --- 3. Ambil Data SPL berdasarkan NRP dan Tanggal ---
                 has_spl = False
@@ -264,8 +299,8 @@ def generate_bmp_timesheets():
                             pass
 
                 if has_spl:
-                    ws.Cells(r, 9).Value = spl_start_val  # Kolom I (IN)
-                    ws.Cells(r, 10).Value = spl_end_val   # Kolom J (OUT)
+                    ws.Cells(r, 9).Value = spl_start_val   # Kolom I (IN)
+                    ws.Cells(r, 10).Value = spl_end_val    # Kolom J (OUT)
                     ws.Cells(r, 11).Value = round(total_spl_val, 1) # Kolom K (Total SPL)
                 else:
                     ws.Cells(r, 9).Value = "-"
@@ -285,11 +320,9 @@ def generate_bmp_timesheets():
             nama_clean = nama_str.replace(' ', '_').replace('/', '_')
             pdf_filename = f"Timesheet_BMP_{nrp_str}_{nama_clean}_{periode_str}.pdf"
             
-            # Buat sub-folder periode di dalam folder kategori BMP
             period_folder = os.path.join(folder_kategori, periode_str)
             os.makedirs(period_folder, exist_ok=True)
             
-            # Path akhir file PDF di dalam folder periode
             pdf_path = os.path.abspath(os.path.join(period_folder, pdf_filename))
 
             ws.ExportAsFixedFormat(0, pdf_path)
