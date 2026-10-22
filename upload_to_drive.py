@@ -71,8 +71,18 @@ def get_or_create_main_folder(service, folder_name):
     folder = service.files().create(body=folder_metadata, fields='id').execute()
     return folder.get('id')
 
+def check_file_exists_in_drive(service, file_name, parent_id):
+    """Mengecek apakah file PDF sudah ada di dalam folder Drive tujuan"""
+    clean_name = file_name.replace("'", "\\'")
+    try:
+        query = f"name = '{clean_name}' and '{parent_id}' in parents and trashed = false"
+        results = service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        items = results.get('files', [])
+        return len(items) > 0
+    except Exception:
+        return False
+
 def upload_all_timesheets():
-    
     folder_input = input("👉 Masukkan nama folder utama di Drive (Contoh: TIMESHEET OKTOBER 2026): ").strip()
     
     if not folder_input:
@@ -90,20 +100,18 @@ def upload_all_timesheets():
         print(f"❌ Folder output lokal '{PATH_OUTPUT_ROOT}' tidak ditemukan!")
         return
         
-    print(f"Memulai proses upload sesuai struktur folder...\n")
+    print(f"Memulai proses upload dan pengecekan file...\n")
     uploaded_count = 0
+    skipped_count = 0
     
-    # Dictionary untuk menyimpan ID folder di Drive agar tidak berulang kali membuat/mencari
     folder_cache = {".": main_folder_id}
     
     for root, dirs, files in os.walk(PATH_OUTPUT_ROOT):
         relative_path = os.path.relpath(root, PATH_OUTPUT_ROOT)
         
-        # Tentukan ID parent folder untuk file-file di dalam root ini
         current_parent_id = main_folder_id
         
         if relative_path != ".":
-            # Pisahkan path bertingkat (misal: BMP/Admin Inventory - Mining)
             path_parts = relative_path.split(os.sep)
             accumulated_path = ""
             
@@ -124,6 +132,12 @@ def upload_all_timesheets():
         for file in files:
             if file.lower().endswith('.pdf'):
                 file_path = os.path.join(root, file)
+                
+                # --- CEK APAKAH FILE SUDAH ADA DI GOOGLE DRIVE ---
+                if check_file_exists_in_drive(service, file, current_parent_id):
+                    print(f"⏭️ Sudah ada di Drive (dilewati): [{subfolder_name_display}] {file}")
+                    skipped_count += 1
+                    continue
                 
                 print(f"Mengunggah [{subfolder_name_display}] {file}...")
                 
@@ -146,7 +160,7 @@ def upload_all_timesheets():
                 except Exception as e:
                     print(f"❌ Gagal mengunggah {file}: {e}")
                     
-    print(f"\nSelesai! Total {uploaded_count} file PDF Timesheet berhasil diunggah dengan struktur hierarki yang rapi.")
+    print(f"\nSelesai! {uploaded_count} file baru diunggah, {skipped_count} file lama dilewati (sudah ada di Drive).")
 
 if __name__ == "__main__":
     upload_all_timesheets()
